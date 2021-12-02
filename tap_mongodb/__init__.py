@@ -25,7 +25,6 @@ REQUIRED_CONFIG_KEYS = [
     'host',
     'user',
     'password',
-    'auth_database',
     'database'
 ]
 
@@ -259,31 +258,16 @@ def get_connection_string(config: Dict):
     verify_mode = config.get('verify_mode', 'true') == 'true'
     use_ssl = config.get('ssl') == 'true'
 
-    connection_query = {
-        'readPreference': 'secondaryPreferred',
-        'authSource': config['auth_database'],
-    }
 
-    if config.get('replica_set'):
-        connection_query['replicaSet'] = config['replica_set']
 
-    if use_ssl:
-        connection_query['tls'] = 'true'
-
-    # NB: "sslAllowInvalidCertificates" must ONLY be supplied if `SSL` is true.
-    if not verify_mode and use_ssl:
-        connection_query['tlsAllowInvalidCertificates'] = 'true'
-
-    query_string = parse.urlencode(connection_query)
-
-    connection_string = '{protocol}://{user}:{password}@{host}{port}/{database}?{query_string}'.format(
+    connection_string = '{protocol}://{user}:{password}@{host}{port}/{database}'.format(
         protocol='mongodb+srv' if srv else 'mongodb',
         user=config['user'],
         password=config['password'],
         host=config['host'],
         port='' if srv else ':{port}'.format(port=int(config['port'])),
-        database=config['database'],
-        query_string=query_string
+        database=config['database']
+
     )
 
     return connection_string
